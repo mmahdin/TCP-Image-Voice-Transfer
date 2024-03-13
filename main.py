@@ -5,9 +5,24 @@ from PySide6.QtGui import *
 import cv2
 import numpy as np
 from PySide6.QtCore import QThread, Signal
+from functools import partial
 
 # Global flag for image change
 global_flag = True
+
+button_style = """
+    QPushButton {
+        border: 2px solid #8f8f91;
+        border-radius: 10px;
+        min-width: 50px;
+        font-size: 24px;
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2.png);
+    }
+    
+    QPushButton:pressed {
+        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+    }
+"""
 
 
 class ImageThread(QThread):
@@ -18,7 +33,7 @@ class ImageThread(QThread):
         while True:
             if global_flag:
                 # Load the new image, you can replace this with your own logic
-                image = cv2.imread("imgs/no_image1.jpg")
+                image = cv2.imread("imgs/no_image2.jpg")
                 image = cv2.resize(image, (400, 500))
                 self.change_image_signal.emit(image)
                 # Reset the flag after updating the image
@@ -106,7 +121,12 @@ class MainWindow(QMainWindow):
 
         # Change this to instance variable
         self.left_image_label = QLabel("Left Image")
-        left_button = QPushButton("Left Button")
+        left_button = QPushButton()
+        left_button.setStyleSheet(button_style)
+        left_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        left_button.move(100, 200)
+        left_button.setMinimumSize(100, 100)
+        left_button.setMaximumSize(100, 100)
 
         self.right_top_image_label = QLabel("Right Top Image")
         right_top_button = QPushButton("Right Top Button")
