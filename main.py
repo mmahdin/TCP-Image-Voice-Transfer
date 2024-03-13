@@ -1,5 +1,7 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QLabel
+from PySide6.QtWidgets import *
+from PySide6 import *
+from PySide6.QtCore import *
 
 
 class MainWindow(QMainWindow):
@@ -7,7 +9,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("GUI Example")
-        self.setGeometry(100, 100, 800, 600)  # Set initial geometry
+        self.setGeometry(100, 100, 1000, 600)  # Set initial geometry
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -20,18 +22,29 @@ class MainWindow(QMainWindow):
 
         # IP layout
         ip_layout = QHBoxLayout()
-        main_layout.addLayout(ip_layout)
+        ip_layout.setObjectName("ipLayout")  # Set object name for styling
+        main_layout.addLayout(ip_layout, 1)  # Set the stretch factor to 1
 
         ip_entry1 = QLineEdit()
         ip_entry2 = QLineEdit()
         ip_button = QPushButton("Submit")
-        ip_layout.addWidget(ip_entry1)
-        ip_layout.addWidget(ip_entry2)
-        ip_layout.addWidget(ip_button)
+
+        # Set fixed sizes for the widgets
+        ip_entry1.setFixedSize(200, 30)
+        ip_entry2.setFixedSize(100, 30)
+        ip_button.setFixedSize(100, 30)
+
+        ip_layout.addWidget(ip_entry1, 4)  # Set the stretch factor to 4
+        ip_layout.addWidget(ip_entry2, 1)  # Set the stretch factor to 1
+        ip_layout.addWidget(ip_button, 1)   # Set the stretch factor to 1
+
+        ip_layout.setAlignment(Qt.AlignHCenter)
 
         # Image layout
         image_layout = QHBoxLayout()
-        main_layout.addLayout(image_layout)
+        # Set object name for styling
+        image_layout.setObjectName("imageLayout")
+        main_layout.addLayout(image_layout, 2)  # Set the stretch factor to 2
 
         left_vertical_layout = QVBoxLayout()
         right_vertical_layout = QVBoxLayout()
@@ -60,10 +73,26 @@ class MainWindow(QMainWindow):
 
         # Send layout
         send_layout = QHBoxLayout()
-        main_layout.addLayout(send_layout)
+        send_layout.setObjectName("sendLayout")  # Set object name for styling
+        main_layout.addLayout(send_layout, 1)  # Set the stretch factor to 1
 
         send_button = QPushButton("Send")
         send_layout.addWidget(send_button)
+
+        # Apply style sheets to layouts
+        self.setStyleSheet("""
+        #ipLayout {
+            background-color: black;
+        }
+
+        #imageLayout {
+            background-color: lightgreen;
+        }
+
+        #sendLayout {
+            background-color: lightyellow;
+        }
+        """)
 
 
 if __name__ == "__main__":
