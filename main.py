@@ -16,11 +16,11 @@ button_style_r = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b.png);
     }
     
     QPushButton:pressed {
-        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b2.png);
     }
 """
 
@@ -30,11 +30,11 @@ button_style_si = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/cap.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/capb.png);
     }
     
     QPushButton:pressed {
-        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/capb2.png);
     }
 """
 
@@ -44,11 +44,11 @@ button_style_sv = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b2.png);
     }
     
     QPushButton:pressed {
-        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b.png);
     }
 """
 
@@ -58,11 +58,11 @@ button_style_sav = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/dir.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/dirb.png);
     }
     
     QPushButton:pressed {
-        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/dirb2.png);
     }
 """
 
@@ -72,11 +72,28 @@ button_style_send = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/sv2.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/sv7.png);
     }
     
     QPushButton:pressed {
-        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/sv7b.png);
+    }
+"""
+
+button_style_sub = """
+    QPushButton {
+        border: 2px solid #8f8f91;
+        border-radius: 10px;
+        font-size: 16px;
+        border-radius: 10px;
+        color: #2eff04;
+        border: 1px solid #2eff04;
+    }
+    
+    QPushButton:pressed {
+        border-radius: 12px;
+        color: #fffd0a;
+        border: 1px solid #fffd0a;
     }
 """
 
@@ -121,10 +138,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Fixed Size Window")
         self.setGeometry(100, 100, 1050, 670)  # Set initial geometry
 
-        self.change_titlebar_color(QColor(100, 100, 255))
-
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
+
+        self.setStyleSheet("background-color: #000100;")
 
         self.create_layout()
         self.webcam_thread = WebcamThread()
@@ -142,21 +159,35 @@ class MainWindow(QMainWindow):
 
         ################################### IP layout ###################################
         ip_widget = QWidget(self)
+        # ip_widget.setStyleSheet("background-color: #140032;")
 
         ip_layout = QHBoxLayout()
         ip_layout.setObjectName("ipLayout")  # Set object name for styling
 
+        desc = QLabel("IP : Port")
+        desc.setStyleSheet(
+            "color: #e500e8 ;background-color: None;font-size:25px; font-family:Comic Sans MS;")
+
         ip_entry1 = QLineEdit()
-        ip_entry1.setPlaceholderText("IP")
+        ip_entry1.setPlaceholderText("  IP")
+        ip_entry1.setStyleSheet(
+            "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 10px;")
+
         ip_entry2 = QLineEdit()
-        ip_entry2.setPlaceholderText("Port")
-        ip_button = QPushButton("Submit")
+        ip_entry2.setStyleSheet(
+            "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 10px;")
+        ip_entry2.setPlaceholderText("  Port")
+
+        ip_button = QPushButton("Connect")
+        ip_button.setStyleSheet(button_style_sub)
 
         # Set fixed sizes for the widgets
-        ip_entry1.setFixedSize(200, 30)
-        ip_entry2.setFixedSize(100, 30)
+        desc.setFixedSize(80, 30)
+        ip_entry1.setFixedSize(150, 30)
+        ip_entry2.setFixedSize(70, 30)
         ip_button.setFixedSize(100, 30)
 
+        ip_layout.addWidget(desc, 1)
         ip_layout.addWidget(ip_entry1, 4)  # Set the stretch factor to 4
         ip_layout.addWidget(ip_entry2, 1)  # Set the stretch factor to 1
         ip_layout.addWidget(ip_button, 1)   # Set the stretch factor to 1
