@@ -10,13 +10,69 @@ from functools import partial
 # Global flag for image change
 global_flag = True
 
-button_style = """
+button_style_r = """
     QPushButton {
         border: 2px solid #8f8f91;
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
         border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2.png);
+    }
+    
+    QPushButton:pressed {
+        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+    }
+"""
+
+button_style_si = """
+    QPushButton {
+        border: 2px solid #8f8f91;
+        border-radius: 10px;
+        min-width: 50px;
+        font-size: 24px;
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/cap.png);
+    }
+    
+    QPushButton:pressed {
+        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+    }
+"""
+
+button_style_sv = """
+    QPushButton {
+        border: 2px solid #8f8f91;
+        border-radius: 10px;
+        min-width: 50px;
+        font-size: 24px;
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2.png);
+    }
+    
+    QPushButton:pressed {
+        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+    }
+"""
+
+button_style_sav = """
+    QPushButton {
+        border: 2px solid #8f8f91;
+        border-radius: 10px;
+        min-width: 50px;
+        font-size: 24px;
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/dir.png);
+    }
+    
+    QPushButton:pressed {
+        border-image: url(C:/Users/Mahdi/Documents/first/icon/login3p.png);
+    }
+"""
+
+button_style_send = """
+    QPushButton {
+        border: 2px solid #8f8f91;
+        border-radius: 10px;
+        min-width: 50px;
+        font-size: 24px;
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/sv2.png);
     }
     
     QPushButton:pressed {
@@ -34,7 +90,7 @@ class ImageThread(QThread):
             if global_flag:
                 # Load the new image, you can replace this with your own logic
                 image = cv2.imread("imgs/no_image2.jpg")
-                image = cv2.resize(image, (400, 500))
+                image = cv2.resize(image, (500, 400))
                 self.change_image_signal.emit(image)
                 # Reset the flag after updating the image
                 global_flag = False
@@ -61,8 +117,11 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("GUI Example")
-        self.setGeometry(100, 100, 1400, 800)  # Set initial geometry
+        self.setWindowTitle("TCP connection")
+        self.setWindowTitle("Fixed Size Window")
+        self.setGeometry(100, 100, 1050, 670)  # Set initial geometry
+
+        self.change_titlebar_color(QColor(100, 100, 255))
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -88,7 +147,9 @@ class MainWindow(QMainWindow):
         ip_layout.setObjectName("ipLayout")  # Set object name for styling
 
         ip_entry1 = QLineEdit()
+        ip_entry1.setPlaceholderText("IP")
         ip_entry2 = QLineEdit()
+        ip_entry2.setPlaceholderText("Port")
         ip_button = QPushButton("Submit")
 
         # Set fixed sizes for the widgets
@@ -107,8 +168,8 @@ class MainWindow(QMainWindow):
 
         ################################### Image layout ###################################
         image_widget = QWidget(self)
-        left_vertical_widget = QWidget(self)
-        right_vertical_widget = QWidget(self)
+        left_vertical_widget = QWidget(image_widget)
+        right_vertical_widget = QWidget(image_widget)
 
         image_layout = QHBoxLayout()
         image_layout.setObjectName("imageLayout")
@@ -116,58 +177,46 @@ class MainWindow(QMainWindow):
         image_widget.setLayout(image_layout)
         main_layout.addWidget(image_widget, 10)
 
-        left_vertical_layout = QVBoxLayout()
-        right_vertical_layout = QVBoxLayout()
-
         # Change this to instance variable
-        self.left_image_label = QLabel("Left Image")
-        left_button = QPushButton()
-        left_button.setStyleSheet(button_style)
-        left_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        left_button.move(100, 200)
-        left_button.setMinimumSize(100, 100)
-        left_button.setMaximumSize(100, 100)
+        self.left_image_label = QLabel(left_vertical_widget)
+        self.left_image_label.resize(500, 400)
+        # self.left_image_label.move(1, 1)
 
-        self.right_top_image_label = QLabel("Right Top Image")
-        right_top_button = QPushButton("Right Top Button")
+        left_button = QPushButton(left_vertical_widget)
+        left_button.setStyleSheet(button_style_r)
+        left_button.move(210, 410)
+        left_button.resize(70, 70)
 
-        right_bottom_layout = QHBoxLayout()
-        right_bottom_button1 = QPushButton("Button 1")
-        right_bottom_button2 = QPushButton("Button 2")
-        right_bottom_layout.addWidget(right_bottom_button1)
-        right_bottom_layout.addWidget(right_bottom_button2)
+        self.right_top_image_label = QLabel(right_vertical_widget)
+        self.right_top_image_label.resize(500, 400)
+        # self.right_top_image_label.move(100, 1)
 
-        # Change this to instance variable
-        left_vertical_layout.addWidget(self.left_image_label)
-        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum,
-                             QSizePolicy.Expanding)
-        left_vertical_layout.addItem(spacer)
-        left_vertical_layout.addWidget(left_button)
+        right_top_button = QPushButton(right_vertical_widget)
+        right_top_button.setStyleSheet(button_style_si)
+        right_top_button.move(120, 410)
+        right_top_button.resize(80, 80)
 
-        right_vertical_layout.addWidget(self.right_top_image_label)
-        right_vertical_layout.addWidget(right_top_button)
-        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum,
-                             QSizePolicy.Expanding)
-        right_vertical_layout.addItem(spacer)
-        right_vertical_layout.addLayout(right_bottom_layout)
+        right_bottom_button1 = QPushButton(right_vertical_widget)
+        right_bottom_button1.setStyleSheet(button_style_sv)
+        right_bottom_button1.move(220, 410)
+        right_bottom_button1.resize(70, 70)
 
-        left_vertical_widget.setLayout(left_vertical_layout)
-        right_vertical_widget.setLayout(right_vertical_layout)
-        left_vertical_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
-        right_vertical_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+        right_bottom_button2 = QPushButton(right_vertical_widget)
+        right_bottom_button2.setStyleSheet(button_style_sav)
+        right_bottom_button2.move(320, 410)
+        right_bottom_button2.resize(70, 70)
 
         image_layout.addWidget(left_vertical_widget)
         image_layout.addWidget(right_vertical_widget)
 
         ################################### Send layout ###################################
-        send_layout = QHBoxLayout()
-        send_layout.setObjectName("sendLayout")
-        main_layout.addLayout(send_layout, 1)
-
-        send_button = QPushButton("Send")
-        send_layout.addWidget(send_button)
+        send_button = QPushButton(self)
+        send_button.setStyleSheet(button_style_send)
+        send_button.move(500, 600)
+        send_button.resize(70, 70)
 
     def update_image(self, cv_img):
+        cv_img = cv2.resize(cv_img, (500, 400))
         qt_img = QImage(
             cv_img.data, cv_img.shape[1], cv_img.shape[0], QImage.Format_RGB888).rgbSwapped()
         pixmap = QPixmap.fromImage(qt_img)
