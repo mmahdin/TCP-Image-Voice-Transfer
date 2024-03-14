@@ -1,14 +1,16 @@
-import sys  # Importing the sys module for system-specific parameters and functions
-# Importing classes for building the GUI application using PySide6
+import sys
 from PySide6.QtWidgets import *
-from PySide6.QtCore import *  # Importing core functionality from PySide6
-# Importing QtGui module from PySide6 for graphical features
+from PySide6.QtCore import *
 from PySide6.QtGui import *
-import cv2  # Importing the OpenCV library for computer vision tasks
-import numpy as np  # Importing NumPy for numerical computing
-# Importing QThread and Signal from PySide6 for multithreading
+import cv2
+import sys
+import wave
+import pyaudio
+import numpy as np
 from PySide6.QtCore import QThread, Signal
-from functools import partial  # Importing partial function from functools module
+from functools import partial
+from PySide6.QtMultimedia import QAudioFormat, QAudio
+
 
 # Global flag for image change
 global_flag = True  # Declaring a global flag to control image updates
@@ -51,10 +53,6 @@ button_style_sv = """
         min-width: 50px;
         font-size: 24px;
         border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b2.png);
-    }
-    
-    QPushButton:pressed {
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b.png);
     }
 """
 
@@ -140,6 +138,38 @@ class WebcamThread(QThread):
                 pass  # If frame capture fails, do nothing to handle the error
 
 
+class AudioRecorderThread(QThread):
+    frame_ready = Signal(bytes)
+
+    def __init__(self, audio_format, channels, sample_rate, chunk):
+        super().__init__()
+        self.audio_format = audio_format
+        self.channels = channels
+        self.sample_rate = sample_rate
+        self.chunk = chunk
+        self.audio_frames = []
+        self._stop = False
+
+    def stop(self):
+        self._stop = True
+
+    def run(self):
+        audio = pyaudio.PyAudio()
+        audio_stream = audio.open(format=self.audio_format,
+                                  channels=self.channels,
+                                  rate=self.sample_rate,
+                                  frames_per_buffer=self.chunk,
+                                  input=True)
+
+        while not self._stop:
+            data = audio_stream.read(self.chunk)
+            self.frame_ready.emit(data)
+
+        audio_stream.stop_stream()
+        audio_stream.close()
+        audio.terminate()
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -169,6 +199,18 @@ class MainWindow(QMainWindow):
         self.image_thread = ImageThread()
         self.image_thread.change_image_signal.connect(self.update_left_image)
         self.image_thread.start()
+
+        # parameter of recording voice
+        self.recording = False
+        self.output_file = "./voice_rec/my_voice.wav"
+        self.audio_format = pyaudio.paInt16
+        self.channels = 1
+        self.sample_rate = 44000
+        self.chunk = 1024
+
+        self.recorder_thread = AudioRecorderThread(
+            self.audio_format, self.channels, self.sample_rate, self.chunk)
+        self.recorder_thread.frame_ready.connect(self.process_audio_frame)
 
     def create_layout(self):
         # Create main layout for central widget
@@ -261,11 +303,11 @@ class MainWindow(QMainWindow):
         right_top_button.clicked.connect(self.capture_image)
 
         # Create QPushButton instance for recording voice functionality
-        right_bottom_button1 = QPushButton(right_vertical_widget)
-        right_bottom_button1.setStyleSheet(button_style_sv)
-        right_bottom_button1.move(220, 410)
-        right_bottom_button1.resize(70, 70)
-        right_bottom_button1.clicked.connect(self.record_voice)
+        self.right_bottom_button1 = QPushButton(right_vertical_widget)
+        self.right_bottom_button1.setStyleSheet(button_style_sv)
+        self.right_bottom_button1.move(220, 410)
+        self.right_bottom_button1.resize(70, 70)
+        self.right_bottom_button1.clicked.connect(self.record_voice)
 
         # Create QPushButton instance for selecting voice directory functionality
         right_bottom_button2 = QPushButton(right_vertical_widget)
@@ -301,6 +343,7 @@ class MainWindow(QMainWindow):
         if capture_image_flg == 1:
             cv2.imwrite("./capture/myimg.png", cv_img)
             capture_image_flg = 0
+            cv_img = np.ones_like(cv_img)
 
         # Resize the image to fit the QLabel
         cv_img = cv2.resize(cv_img, (500, 400))
@@ -356,7 +399,30 @@ class MainWindow(QMainWindow):
         """
         Handle the functionality for recording voice.
         """
-        pass
+        if not self.recording:
+            self.audio_frames = []
+            self.recorder_thread.start()
+            self.right_bottom_button1.setStyleSheet(
+                "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b.png);")
+            self.recording = True
+        else:
+            self.recorder_thread.stop()
+            self.recorder_thread.wait()
+            self.save_audio()
+            self.right_bottom_button1.setStyleSheet(
+                "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b2.png);")
+            self.recording = False
+
+    def process_audio_frame(self, frame):
+        self.audio_frames.append(frame)
+
+    def save_audio(self):
+        wf = wave.open(self.output_file, "wb")
+        wf.setnchannels(self.channels)
+        wf.setsampwidth(pyaudio.PyAudio().get_sample_size(self.audio_format))
+        wf.setframerate(self.sample_rate)
+        wf.writeframes(b"".join(self.audio_frames))
+        wf.close()
 
     def choose_voice_path(self):
         """
