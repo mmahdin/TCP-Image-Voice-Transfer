@@ -13,6 +13,8 @@ from functools import partial  # Importing partial function from functools modul
 # Global flag for image change
 global_flag = True  # Declaring a global flag to control image updates
 
+capture_image_flg = 0  # Declaring a global flag to control capture image
+
 # CSS-like button styles for various functionalities
 button_style_r = """
     QPushButton {
@@ -293,6 +295,13 @@ class MainWindow(QMainWindow):
         Returns:
             None
         """
+        global capture_image_flg
+
+        # capture image and save it
+        if capture_image_flg == 1:
+            cv2.imwrite("./capture/myimg.png", cv_img)
+            capture_image_flg = 0
+
         # Resize the image to fit the QLabel
         cv_img = cv2.resize(cv_img, (500, 400))
         # Convert the OpenCV image to a Qt image
@@ -339,6 +348,8 @@ class MainWindow(QMainWindow):
         """
         Handle the functionality for capturing an image.
         """
+        global capture_image_flg
+        capture_image_flg = 1
         pass
 
     def record_voice(self):
