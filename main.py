@@ -6,8 +6,9 @@ import cv2
 import sys
 import wave
 import pyaudio
+import socket
 import numpy as np
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QObject, QThread, Signal
 from functools import partial
 from PySide6.QtMultimedia import QAudioFormat, QAudio
 
@@ -171,6 +172,32 @@ class AudioRecorderThread(QThread):
         audio.terminate()
 
 
+class SocketServer(QThread):
+    rec_data = Signal(bytes)
+
+    def __init__(self):
+        super().__init__()
+        self.server_ip = '192.168.43.133'
+        self.port = 10101
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind((self.server_ip, self.port))
+        self.server_socket.listen(0)
+
+    def run(self):
+        client_socket, client_address = self.server_socket.accept()
+        print(
+            f"Accepted connection from {client_address[0]}:{client_address[1]}")
+
+        while True:
+            data = client_socket.recv(1024)
+            self.rec_data.emit(data)
+            if data.decode("utf-8").lower() == "close":
+                client_socket.send("closed".encode("utf-8"))
+                break
+            response = "accepted".encode("utf-8")
+            client_socket.send(response)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -200,6 +227,14 @@ class MainWindow(QMainWindow):
         self.image_thread = ImageThread()
         self.image_thread.change_image_signal.connect(self.update_left_image)
         self.image_thread.start()
+
+        # Create and start server
+        self.socket_server = SocketServer()
+        self.socket_server.rec_data.connect(self.update_rec_image)
+        self.socket_server.start()
+
+        # received image
+        self.rec_data = b''
 
         # parameter of recording voice
         self.recording = False
@@ -436,6 +471,13 @@ class MainWindow(QMainWindow):
         if directory:
             print(directory)
             self.output_file = directory
+
+    def update_rec_image(self, data):
+        self.rec_data += data
+        if data.decode("utf-8").lower() == "end":
+            with open('"/home/mahdi/Documents/term7/multiMedia/prj1/env/download/no_image.png"', 'wb') as f:
+                f.write(self.rec_data)
+                self.rec_data = b''
 
 
 if __name__ == "__main__":
