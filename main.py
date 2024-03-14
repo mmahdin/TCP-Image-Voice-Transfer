@@ -180,6 +180,7 @@ class MainWindow(QMainWindow):
 
         ip_button = QPushButton("Connect")
         ip_button.setStyleSheet(button_style_sub)
+        ip_button.clicked.connect(self.connect)
 
         # Set fixed sizes for the widgets
         desc.setFixedSize(80, 30)
@@ -217,6 +218,7 @@ class MainWindow(QMainWindow):
         left_button.setStyleSheet(button_style_r)
         left_button.move(210, 410)
         left_button.resize(70, 70)
+        left_button.clicked.connect(self.play_voice)
 
         self.right_top_image_label = QLabel(right_vertical_widget)
         self.right_top_image_label.resize(500, 400)
@@ -226,16 +228,19 @@ class MainWindow(QMainWindow):
         right_top_button.setStyleSheet(button_style_si)
         right_top_button.move(120, 410)
         right_top_button.resize(80, 80)
+        right_top_button.clicked.connect(self.capture_image)
 
         right_bottom_button1 = QPushButton(right_vertical_widget)
         right_bottom_button1.setStyleSheet(button_style_sv)
         right_bottom_button1.move(220, 410)
         right_bottom_button1.resize(70, 70)
+        right_bottom_button1.clicked.connect(self.record_voice)
 
         right_bottom_button2 = QPushButton(right_vertical_widget)
         right_bottom_button2.setStyleSheet(button_style_sav)
         right_bottom_button2.move(320, 410)
         right_bottom_button2.resize(70, 70)
+        right_bottom_button2.clicked.connect(self.choose_voice_path)
 
         image_layout.addWidget(left_vertical_widget)
         image_layout.addWidget(right_vertical_widget)
@@ -260,6 +265,21 @@ class MainWindow(QMainWindow):
             cv_img.data, width, height, bytesPerLine, QImage.Format_RGB888).rgbSwapped()
         pixmap = QPixmap.fromImage(qt_img)
         self.left_image_label.setPixmap(pixmap)
+
+    def connect(self):
+        pass
+
+    def play_voice(self):
+        pass
+
+    def capture_image(self):
+        pass
+
+    def record_voice(self):
+        pass
+
+    def choose_voice_path(sefl):
+        pass
 
 
 if __name__ == "__main__":
