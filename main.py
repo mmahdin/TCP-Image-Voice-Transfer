@@ -428,7 +428,13 @@ class MainWindow(QMainWindow):
         """
         Handle the functionality for choosing a voice path.
         """
-        pass
+        options = QFileDialog.Options()
+        options |= QFileDialog.ShowDirsOnly
+        directory = QFileDialog.getExistingDirectory(
+            self, "Select Directory", "", options=options)
+        if directory:
+            print(directory)
+            self.output_file = directory
 
 
 if __name__ == "__main__":
