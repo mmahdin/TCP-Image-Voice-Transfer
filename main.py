@@ -111,7 +111,8 @@ class ImageThread(QThread):
         while True:
             if global_flag:  # Check if the flag is set for image update
                 # Load and process the new image (can be replaced with custom logic)
-                image = cv2.imread("imgs/no_image2.jpg")
+                image = cv2.imread(
+                    "/home/mahdi/Documents/term7/multiMedia/prj1/env/download/no_image.png")
                 image = cv2.resize(image, (500, 400))
                 # Emit the signal with the updated image
                 self.change_image_signal.emit(image)
