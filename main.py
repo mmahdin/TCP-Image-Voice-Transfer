@@ -6,11 +6,12 @@ import cv2
 import sys
 import wave
 import pyaudio
+import time
 import socket
 import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal
 from functools import partial
-from PySide6.QtMultimedia import QAudioFormat, QAudio
+from PySide6.QtMultimedia import QSoundEffect
 
 
 # Global flag for image change
@@ -25,11 +26,7 @@ button_style_r = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b.png);
-    }
-    
-    QPushButton:pressed {
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b2.png);
+        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b3.png);
     }
 """
 
@@ -193,6 +190,36 @@ class SocketServer(QThread):
                 self.rec_data.emit(data)
 
 
+class SoundThread(QThread):
+    finished = Signal()
+
+    def __init__(self, chunk, parent=None):
+        super().__init__(parent)
+        self.chunk = chunk
+
+    def run(self):
+        wf = wave.open(
+            "/home/mahdi/Documents/term7/multiMedia/prj1/env/download/voice.wav", 'rb')
+
+        audio = pyaudio.PyAudio()
+        stream = audio.open(format=audio.get_format_from_width(wf.getsampwidth()),
+                            channels=wf.getnchannels(),
+                            rate=wf.getframerate(),
+                            output=True)
+
+        data = wf.readframes(self.chunk)
+
+        while data:
+            stream.write(data)
+            data = wf.readframes(self.chunk)
+
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
+
+        self.finished.emit()
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -230,6 +257,8 @@ class MainWindow(QMainWindow):
 
         # received image
         self.rec_data = b''
+        self.rec_data_type = None
+        self.voice_flg = 0
 
         # parameter of recording voice
         self.recording = False
@@ -319,11 +348,11 @@ class MainWindow(QMainWindow):
         self.left_image_label.setPixmap(pixmap)
 
         # Create a QPushButton instance for left side functionalities
-        left_button = QPushButton(left_vertical_widget)
-        left_button.setStyleSheet(button_style_r)
-        left_button.move(210, 410)
-        left_button.resize(70, 70)
-        left_button.clicked.connect(self.play_voice)
+        self.left_button = QPushButton(left_vertical_widget)
+        self.left_button.setStyleSheet(button_style_r)
+        self.left_button.move(210, 410)
+        self.left_button.resize(70, 70)
+        self.left_button.clicked.connect(self.play_voice)
 
         # Create QLabel instance for displaying images on the right side
         self.right_top_image_label = QLabel(right_vertical_widget)
@@ -419,7 +448,21 @@ class MainWindow(QMainWindow):
         """
         Handle the functionality for playing voice.
         """
+        self.thread = SoundThread(self.chunk)
+        self.thread.finished.connect(self.thread_finished)
+        self.thread.start()
+
+        # Disable the button while the sound is playing
+        self.left_button.setEnabled(False)
+        self.left_button.setStyleSheet(
+            "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b2.png);")
         pass
+
+    def thread_finished(self):
+        # Re-enable the button after the sound has finished playing
+        self.left_button.setEnabled(True)
+        self.left_button.setStyleSheet(
+            "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b.png);")
 
     def capture_image(self):
         """
@@ -472,13 +515,29 @@ class MainWindow(QMainWindow):
 
     def update_rec_image(self, data):
         global global_flag
-        self.rec_data += data
-        if b'end' in data:
-            print(data)
+
+        if b'image' in data:
+            self.rec_data_type = 'image'
+        elif b'voice' in data:
+            self.rec_data_type = 'voice'
+
+        if b'end1' in data:
             with open("/home/mahdi/Documents/term7/multiMedia/prj1/env/download/image.png", 'wb') as f:
                 f.write(self.rec_data)
-                self.rec_data = b''
-                global_flag = True
+            self.rec_data = b''
+            self.rec_data_type = None
+            global_flag = True
+        if b'end2' in data:
+            with open("/home/mahdi/Documents/term7/multiMedia/prj1/env/download/voice.wav", 'wb') as f:
+                f.write(self.rec_data)
+            self.rec_data = b''
+            self.rec_data_type = None
+            self.voice_flg = 1
+
+        if self.rec_data_type == 'image':
+            self.rec_data += data
+        elif self.rec_data_type == 'voice':
+            self.rec_data += data
 
 
 if __name__ == "__main__":
