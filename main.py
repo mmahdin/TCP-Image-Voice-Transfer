@@ -14,7 +14,7 @@ from PySide6.QtMultimedia import QAudioFormat, QAudio
 
 
 # Global flag for image change
-global_flag = True  # Declaring a global flag to control image updates
+global_flag = False  # Declaring a global flag to control image updates
 
 capture_image_flg = 0  # Declaring a global flag to control capture image
 
@@ -113,7 +113,7 @@ class ImageThread(QThread):
             if global_flag:  # Check if the flag is set for image update
                 # Load and process the new image (can be replaced with custom logic)
                 image = cv2.imread(
-                    "/home/mahdi/Documents/term7/multiMedia/prj1/env/download/no_image.png")
+                    "/home/mahdi/Documents/term7/multiMedia/prj1/env/download/image.png")
                 image = cv2.resize(image, (500, 400))
                 # Emit the signal with the updated image
                 self.change_image_signal.emit(image)
@@ -187,15 +187,10 @@ class SocketServer(QThread):
         client_socket, client_address = self.server_socket.accept()
         print(
             f"Accepted connection from {client_address[0]}:{client_address[1]}")
-
         while True:
             data = client_socket.recv(1024)
-            self.rec_data.emit(data)
-            if data.decode("utf-8").lower() == "close":
-                client_socket.send("closed".encode("utf-8"))
-                break
-            response = "accepted".encode("utf-8")
-            client_socket.send(response)
+            if data:
+                self.rec_data.emit(data)
 
 
 class MainWindow(QMainWindow):
@@ -319,6 +314,9 @@ class MainWindow(QMainWindow):
         # Create QLabel instances for displaying images
         self.left_image_label = QLabel(left_vertical_widget)
         self.left_image_label.resize(500, 400)
+        pixmap = QPixmap(
+            "/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/no_image71.png")
+        self.left_image_label.setPixmap(pixmap)
 
         # Create a QPushButton instance for left side functionalities
         left_button = QPushButton(left_vertical_widget)
@@ -473,11 +471,14 @@ class MainWindow(QMainWindow):
             self.output_file = directory
 
     def update_rec_image(self, data):
+        global global_flag
         self.rec_data += data
-        if data.decode("utf-8").lower() == "end":
-            with open('"/home/mahdi/Documents/term7/multiMedia/prj1/env/download/no_image.png"', 'wb') as f:
+        if b'end' in data:
+            print(data)
+            with open("/home/mahdi/Documents/term7/multiMedia/prj1/env/download/image.png", 'wb') as f:
                 f.write(self.rec_data)
                 self.rec_data = b''
+                global_flag = True
 
 
 if __name__ == "__main__":
