@@ -171,6 +171,8 @@ class AudioRecorderThread(QThread):
 
 
 class SocketServer(QThread):
+    finished = Signal()
+
     def __init__(self):
         super().__init__()
         self.server_ip = '0.0.0.0'
@@ -192,13 +194,16 @@ class SocketServer(QThread):
                 f.write(data)
 
     def run(self):
+        global global_flag
         while True:
             client_socket, client_address = self.server_socket.accept()
             signal = self.receive_data(client_socket)
             if signal == "image":
                 self.receive_file(client_socket, "./download/image.png")
+                global_flag = True
             elif signal == "voice":
                 self.receive_file(client_socket, "./download/voice.wav")
+                self.finished.emit()
 
 
 class SoundThread(QThread):
@@ -293,6 +298,7 @@ class MainWindow(QMainWindow):
 
         # Create and start server
         self.socket_server = SocketServer()
+        self.socket_server.finished.connect(self.change_play_img)
         self.socket_server.start()
 
         # received image
@@ -509,6 +515,11 @@ class MainWindow(QMainWindow):
         self.left_button.setEnabled(True)
         self.left_button.setStyleSheet(
             "border-image: url(./imgs/play2b.png);")
+
+    def change_play_img(self):
+        self.left_button.setStyleSheet(
+            "border-image: url(./imgs/play2b.png);")
+        self.voice_flg = 1
 
     def capture_image(self):
         """
