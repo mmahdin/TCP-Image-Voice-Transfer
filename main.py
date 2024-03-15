@@ -171,7 +171,6 @@ class AudioRecorderThread(QThread):
 
 
 class SocketServer(QThread):
-    rec_data = Signal(bytes)
 
     def __init__(self):
         super().__init__()
@@ -181,14 +180,28 @@ class SocketServer(QThread):
         self.server_socket.bind((self.server_ip, self.port))
         self.server_socket.listen(0)
 
+    def receive_data(sock):
+        data = sock.recv(1024).decode()
+        return data
+
+    def receive_file(sock, filename):
+        with open(filename, 'wb') as f:
+            while True:
+                data = sock.recv(1024)
+                if not data:
+                    break
+                f.write(data)
+
     def run(self):
-        client_socket, client_address = self.server_socket.accept()
-        print(
-            f"Accepted connection from {client_address[0]}:{client_address[1]}")
         while True:
-            data = client_socket.recv(1024)
-            if data:
-                self.rec_data.emit(data)
+            client_socket, client_address = self.server_socket.accept()
+            signal = self.receive_data(client_socket)
+            if signal == "image":
+                self.receive_file(client_socket, "./download/image.png")
+            elif signal == "voice":
+                self.receive_file(client_socket, "./download/voice.wav")
+            else:
+                print("Unknown signal:", signal)
 
 
 class SoundThread(QThread):
@@ -222,50 +235,33 @@ class SoundThread(QThread):
 
 
 class SendMessage(QThread):
-    finished = Signal()
 
     def __init__(self, ip, port, parent=None):
         super().__init__(parent)
         self.ip = ip
         self.port = port
 
+    def send_data(sock, data):
+        sock.sendall(data.encode())
+
+    def send_file(sock, filename):
+        with open(filename, 'rb') as f:
+            while True:
+                data = f.read(1024)
+                if not data:
+                    break
+                sock.sendall(data)
+
     def run(self):
-        # Creating a socket object
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            # Attempting to connect to the specified IP address and port
-            client_socket.connect((self.ip, int(self.port)))
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((self.ip, self.port))
 
-            # Sending a message to specify that an image will be sent next
-            client_socket.sendall(b'image')
-
-            # Opening the image file in binary mode and sending its data in chunks
-            with open('./capture/myimg.png', 'rb') as f:
-                while True:
-                    image_data = f.read(1024)
-                    if not image_data:
-                        break
-                    client_socket.sendall(image_data)
-
-            # Sending a message to specify that image sending is complete
-            client_socket.sendall(b'end1')
-
-            # Sending a message to specify that a voice file will be sent next
-            client_socket.sendall(b'voice')
-
-            # Opening the voice file in binary mode and sending its data in chunks
-            with open('./voice_rec/my_voice.wav', 'rb') as f:
-                while True:
-                    voice_data = f.read(1024)
-                    if not voice_data:
-                        break
-                    client_socket.sendall(voice_data)
-
-            # Sending a message to specify that voice sending is complete
-            client_socket.sendall(b'end2')
-        finally:
-            # Closing the socket connection
-            client_socket.close()
+        self.send_data(sock, "image")
+        self.send_file(sock, './capture/myimg.png')
+        self.send_data(sock, "end1")
+        self.send_data(sock, "voice")
+        self.send_file(sock, './voice_rec/my_voice.wav')
+        self.send_data(sock, "end2")
 
 
 class MainWindow(QMainWindow):
@@ -300,7 +296,6 @@ class MainWindow(QMainWindow):
 
         # Create and start server
         self.socket_server = SocketServer()
-        self.socket_server.rec_data.connect(self.update_rec_image)
         self.socket_server.start()
 
         # received image
@@ -502,15 +497,15 @@ class MainWindow(QMainWindow):
         """
         Handle the functionality for playing voice.
         """
-        self.thread = SoundThread(self.chunk)
-        self.thread.finished.connect(self.thread_finished)
-        self.thread.start()
+        if self.voice_flg == 1:
+            self.thread = SoundThread(self.chunk)
+            self.thread.finished.connect(self.thread_finished)
+            self.thread.start()
 
-        # Disable the button while the sound is playing
-        self.left_button.setEnabled(False)
-        self.left_button.setStyleSheet(
-            "border-image: url(./imgs/play2b2.png);")
-        pass
+            # Disable the button while the sound is playing
+            self.left_button.setEnabled(False)
+            self.left_button.setStyleSheet(
+                "border-image: url(./imgs/play2b2.png);")
 
     def thread_finished(self):
         # Re-enable the button after the sound has finished playing
@@ -566,34 +561,6 @@ class MainWindow(QMainWindow):
         if directory:
             print(directory)
             self.output_file = directory
-
-    def update_rec_image(self, data):
-        global global_flag
-
-        if self.rec_data_type == 'image':
-            self.rec_data += data
-        elif self.rec_data_type == 'voice':
-            self.rec_data += data
-
-        if b'image' in data:
-            self.rec_data_type = 'image'
-            if os.path.exists("./download/voice.wav"):
-                os.remove("./download/voice.wav")
-        elif b'voice' in data:
-            self.rec_data_type = 'voice'
-
-        if b'end1' in data:
-            with open("./download/image.png", 'wb') as f:
-                f.write(self.rec_data)
-            self.rec_data = b''
-            self.rec_data_type = None
-            global_flag = True
-        if b'end2' in data:
-            with open("./download/voice.wav", 'wb') as f:
-                f.write(self.rec_data)
-            self.rec_data = b''
-            self.rec_data_type = None
-            self.voice_flg = 1
 
     def send_message(self):
         """
