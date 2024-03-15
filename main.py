@@ -272,9 +272,11 @@ class MainWindow(QMainWindow):
 
         # Set window title and initial geometry
         self.setWindowTitle("TCP connection")  # Set the window title
-        self.setWindowTitle("Fixed Size Window")  # Set the window title
-        # Set initial geometry (position and size)
-        self.setGeometry(100, 100, 1050, 670)
+
+        # Set size of window
+        self.setWindowTitle("Fixed Size Window")
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setFixedSize(1050, 670)
 
         # Create a central widget
         self.central_widget = QWidget()
@@ -334,7 +336,7 @@ class MainWindow(QMainWindow):
         # Label for displaying "IP : Port"
         desc = QLabel("IP : Port")
         desc.setStyleSheet(
-            "color: #e500e8 ;background-color: None;font-size:25px; font-family:Comic Sans MS;")
+            "color: #e500e8 ;background-color: None;font-size:20px;")
 
         # Line edit for entering IP address
         self.ip_entry1 = QLineEdit()
