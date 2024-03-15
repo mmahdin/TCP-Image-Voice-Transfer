@@ -174,7 +174,7 @@ class SocketServer(QThread):
 
     def __init__(self):
         super().__init__()
-        self.server_ip = '192.168.43.133'
+        self.server_ip = '0.0.0.0'
         self.port = 10101
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.server_ip, self.port))
