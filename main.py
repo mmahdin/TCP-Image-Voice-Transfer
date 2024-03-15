@@ -171,7 +171,6 @@ class AudioRecorderThread(QThread):
 
 
 class SocketServer(QThread):
-
     def __init__(self):
         super().__init__()
         self.server_ip = '0.0.0.0'
@@ -193,15 +192,13 @@ class SocketServer(QThread):
                 f.write(data)
 
     def run(self):
-        client_socket, client_address = self.server_socket.accept()
         while True:
+            client_socket, client_address = self.server_socket.accept()
             signal = self.receive_data(client_socket)
             if signal == "image":
                 self.receive_file(client_socket, "./download/image.png")
             elif signal == "voice":
                 self.receive_file(client_socket, "./download/voice.wav")
-            else:
-                print("Unknown signal:", signal)
 
 
 class SoundThread(QThread):
@@ -235,7 +232,6 @@ class SoundThread(QThread):
 
 
 class SendMessage(QThread):
-
     def __init__(self, ip, port, parent=None):
         super().__init__(parent)
         self.ip = ip
@@ -255,11 +251,14 @@ class SendMessage(QThread):
     def run(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((self.ip, self.port))
-
-        self.send_data(sock, "image")
-        self.send_file(sock, './capture/myimg.png')
         self.send_data(sock, "voice")
         self.send_file(sock, './voice_rec/my_voice.wav')
+        sock.close()
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((self.ip, self.port))
+        self.send_data(sock, "image")
+        self.send_file(sock, './capture/myimg.png')
 
 
 class MainWindow(QMainWindow):
