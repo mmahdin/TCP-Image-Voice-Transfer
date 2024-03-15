@@ -224,8 +224,10 @@ class SoundThread(QThread):
 class SendMessage(QThread):
     finished = Signal()
 
-    def __init__(self, chunk, parent=None):
+    def __init__(self, ip, port, parent=None):
         super().__init__(parent)
+        self.ip = ip
+        self.port = port
 
     def run(self):
         # Creating a socket object
@@ -568,6 +570,11 @@ class MainWindow(QMainWindow):
     def update_rec_image(self, data):
         global global_flag
 
+        if self.rec_data_type == 'image':
+            self.rec_data += data
+        elif self.rec_data_type == 'voice':
+            self.rec_data += data
+
         if b'image' in data:
             self.rec_data_type = 'image'
             if os.path.exists("./download/voice.wav"):
@@ -588,11 +595,6 @@ class MainWindow(QMainWindow):
             self.rec_data_type = None
             self.voice_flg = 1
 
-        if self.rec_data_type == 'image':
-            self.rec_data += data
-        elif self.rec_data_type == 'voice':
-            self.rec_data += data
-
     def send_message(self):
         """
         Function to send messages including images and voice files over a socket connection.
@@ -603,7 +605,8 @@ class MainWindow(QMainWindow):
         Returns:
             None
         """
-        pass
+        self.thread = SendMessage(self.ip, self.port)
+        self.thread.start()
 
 
 if __name__ == "__main__":
