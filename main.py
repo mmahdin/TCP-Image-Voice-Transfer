@@ -181,7 +181,7 @@ class SocketServer(QThread):
         self.server_socket.listen(0)
 
     def receive_data(self, sock):
-        data = sock.recv(1024).decode()
+        data = sock.recv(5).decode()
         return data
 
     def receive_file(self, sock, filename):
@@ -193,8 +193,8 @@ class SocketServer(QThread):
                 f.write(data)
 
     def run(self):
+        client_socket, client_address = self.server_socket.accept()
         while True:
-            client_socket, client_address = self.server_socket.accept()
             signal = self.receive_data(client_socket)
             if signal == "image":
                 self.receive_file(client_socket, "./download/image.png")
@@ -258,10 +258,8 @@ class SendMessage(QThread):
 
         self.send_data(sock, "image")
         self.send_file(sock, './capture/myimg.png')
-        self.send_data(sock, "end1")
         self.send_data(sock, "voice")
         self.send_file(sock, './voice_rec/my_voice.wav')
-        self.send_data(sock, "end2")
 
 
 class MainWindow(QMainWindow):
