@@ -221,6 +221,51 @@ class SoundThread(QThread):
         self.finished.emit()
 
 
+class SendMessage(QThread):
+    finished = Signal()
+
+    def __init__(self, chunk, parent=None):
+        super().__init__(parent)
+
+    def run(self):
+        # Creating a socket object
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            # Attempting to connect to the specified IP address and port
+            client_socket.connect((self.ip, int(self.port)))
+
+            # Sending a message to specify that an image will be sent next
+            client_socket.sendall(b'image')
+
+            # Opening the image file in binary mode and sending its data in chunks
+            with open('./capture/myimg.png', 'rb') as f:
+                while True:
+                    image_data = f.read(1024)
+                    if not image_data:
+                        break
+                    client_socket.sendall(image_data)
+
+            # Sending a message to specify that image sending is complete
+            client_socket.sendall(b'end1')
+
+            # Sending a message to specify that a voice file will be sent next
+            client_socket.sendall(b'voice')
+
+            # Opening the voice file in binary mode and sending its data in chunks
+            with open('./voice_rec/my_voice.wav', 'rb') as f:
+                while True:
+                    voice_data = f.read(1024)
+                    if not voice_data:
+                        break
+                    client_socket.sendall(voice_data)
+
+            # Sending a message to specify that voice sending is complete
+            client_socket.sendall(b'end2')
+        finally:
+            # Closing the socket connection
+            client_socket.close()
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -318,7 +363,7 @@ class MainWindow(QMainWindow):
         ip_layout.addWidget(desc, 1)
         ip_layout.addWidget(self.ip_entry1, 4)
         ip_layout.addWidget(self.ip_entry2, 1)
-        ip_layout.addWidget(self.ip_button, 1)
+        ip_layout.addWidget(ip_button, 1)
 
         # Align IP layout horizontally
         ip_layout.setAlignment(Qt.AlignHCenter)
@@ -393,6 +438,7 @@ class MainWindow(QMainWindow):
         send_button.setStyleSheet(button_style_send)
         send_button.move(500, 600)
         send_button.resize(70, 70)
+        send_button.clicked.connect(self.send_message)
 
     def update_image(self, cv_img):
         """
@@ -546,6 +592,18 @@ class MainWindow(QMainWindow):
             self.rec_data += data
         elif self.rec_data_type == 'voice':
             self.rec_data += data
+
+    def send_message(self):
+        """
+        Function to send messages including images and voice files over a socket connection.
+
+        Args:
+            self: The instance of the class.
+
+        Returns:
+            None
+        """
+        pass
 
 
 if __name__ == "__main__":
