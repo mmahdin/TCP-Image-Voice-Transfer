@@ -261,6 +261,9 @@ class MainWindow(QMainWindow):
         self.rec_data_type = None
         self.voice_flg = 0
 
+        self.ip = None
+        self.port = None
+
         # parameter of recording voice
         self.recording = False
         self.output_file = "./voice_rec/my_voice.wav"
@@ -289,16 +292,16 @@ class MainWindow(QMainWindow):
             "color: #e500e8 ;background-color: None;font-size:25px; font-family:Comic Sans MS;")
 
         # Line edit for entering IP address
-        ip_entry1 = QLineEdit()
-        ip_entry1.setPlaceholderText("  IP")
-        ip_entry1.setStyleSheet(
+        self.ip_entry1 = QLineEdit()
+        self.ip_entry1.setPlaceholderText("  IP")
+        self.ip_entry1.setStyleSheet(
             "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 10px;")
 
         # Line edit for entering port number
-        ip_entry2 = QLineEdit()
-        ip_entry2.setStyleSheet(
+        self.ip_entry2 = QLineEdit()
+        self.ip_entry2.setStyleSheet(
             "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 10px;")
-        ip_entry2.setPlaceholderText("  Port")
+        self.ip_entry2.setPlaceholderText("  Port")
 
         # Button for connecting
         ip_button = QPushButton("Connect")
@@ -307,15 +310,15 @@ class MainWindow(QMainWindow):
 
         # Set fixed sizes for the widgets
         desc.setFixedSize(80, 30)
-        ip_entry1.setFixedSize(150, 30)
-        ip_entry2.setFixedSize(70, 30)
+        self.ip_entry1.setFixedSize(150, 30)
+        self.ip_entry2.setFixedSize(70, 30)
         ip_button.setFixedSize(100, 30)
 
         # Add widgets to IP layout
         ip_layout.addWidget(desc, 1)
-        ip_layout.addWidget(ip_entry1, 4)
-        ip_layout.addWidget(ip_entry2, 1)
-        ip_layout.addWidget(ip_button, 1)
+        ip_layout.addWidget(self.ip_entry1, 4)
+        ip_layout.addWidget(self.ip_entry2, 1)
+        ip_layout.addWidget(self.ip_button, 1)
 
         # Align IP layout horizontally
         ip_layout.setAlignment(Qt.AlignHCenter)
@@ -443,6 +446,8 @@ class MainWindow(QMainWindow):
         """
         Handle the functionality for connecting to a server.
         """
+        self.ip = self.ip_entry1.text()
+        self.port = self.ip_entry2.text()
         pass
 
     def play_voice(self):
