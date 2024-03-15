@@ -1,4 +1,5 @@
 import sys
+import os
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
@@ -26,7 +27,7 @@ button_style_r = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b3.png);
+        border-image: url(./imgs/play2b3.png);
     }
 """
 
@@ -36,11 +37,11 @@ button_style_si = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/capb.png);
+        border-image: url(./imgs/capb.png);
     }
     
     QPushButton:pressed {
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/capb2.png);
+        border-image: url(./imgs/capb2.png);
     }
 """
 
@@ -50,7 +51,7 @@ button_style_sv = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b2.png);
+        border-image: url(./imgs/mic2b2.png);
     }
 """
 
@@ -60,11 +61,11 @@ button_style_sav = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/dirb.png);
+        border-image: url(./imgs/dirb.png);
     }
     
     QPushButton:pressed {
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/dirb2.png);
+        border-image: url(./imgs/dirb2.png);
     }
 """
 
@@ -74,11 +75,11 @@ button_style_send = """
         border-radius: 10px;
         min-width: 50px;
         font-size: 24px;
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/sv7.png);
+        border-image: url(./imgs/sv7.png);
     }
     
     QPushButton:pressed {
-        border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/sv7b.png);
+        border-image: url(./imgs/sv7b.png);
     }
 """
 
@@ -110,7 +111,7 @@ class ImageThread(QThread):
             if global_flag:  # Check if the flag is set for image update
                 # Load and process the new image (can be replaced with custom logic)
                 image = cv2.imread(
-                    "/home/mahdi/Documents/term7/multiMedia/prj1/env/download/image.png")
+                    "./download/image.png")
                 image = cv2.resize(image, (500, 400))
                 # Emit the signal with the updated image
                 self.change_image_signal.emit(image)
@@ -199,7 +200,7 @@ class SoundThread(QThread):
 
     def run(self):
         wf = wave.open(
-            "/home/mahdi/Documents/term7/multiMedia/prj1/env/download/voice.wav", 'rb')
+            "./download/voice.wav", 'rb')
 
         audio = pyaudio.PyAudio()
         stream = audio.open(format=audio.get_format_from_width(wf.getsampwidth()),
@@ -344,7 +345,7 @@ class MainWindow(QMainWindow):
         self.left_image_label = QLabel(left_vertical_widget)
         self.left_image_label.resize(500, 400)
         pixmap = QPixmap(
-            "/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/no_image71.png")
+            "./imgs/no_image71.png")
         self.left_image_label.setPixmap(pixmap)
 
         # Create a QPushButton instance for left side functionalities
@@ -455,14 +456,14 @@ class MainWindow(QMainWindow):
         # Disable the button while the sound is playing
         self.left_button.setEnabled(False)
         self.left_button.setStyleSheet(
-            "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b2.png);")
+            "border-image: url(./imgs/play2b2.png);")
         pass
 
     def thread_finished(self):
         # Re-enable the button after the sound has finished playing
         self.left_button.setEnabled(True)
         self.left_button.setStyleSheet(
-            "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/play2b.png);")
+            "border-image: url(./imgs/play2b.png);")
 
     def capture_image(self):
         """
@@ -480,14 +481,14 @@ class MainWindow(QMainWindow):
             self.audio_frames = []
             self.recorder_thread.start()
             self.right_bottom_button1.setStyleSheet(
-                "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b.png);")
+                "border-image: url(./imgs/mic2b.png);")
             self.recording = True
         else:
             self.recorder_thread.stop()
             self.recorder_thread.wait()
             self.save_audio()
             self.right_bottom_button1.setStyleSheet(
-                "border-image: url(/home/mahdi/Documents/term7/multiMedia/prj1/env/imgs/mic2b2.png);")
+                "border-image: url(./imgs/mic2b2.png);")
             self.recording = False
 
     def process_audio_frame(self, frame):
@@ -518,17 +519,19 @@ class MainWindow(QMainWindow):
 
         if b'image' in data:
             self.rec_data_type = 'image'
+            if os.path.exists("./download/voice.wav"):
+                os.remove("./download/voice.wav")
         elif b'voice' in data:
             self.rec_data_type = 'voice'
 
         if b'end1' in data:
-            with open("/home/mahdi/Documents/term7/multiMedia/prj1/env/download/image.png", 'wb') as f:
+            with open("./download/image.png", 'wb') as f:
                 f.write(self.rec_data)
             self.rec_data = b''
             self.rec_data_type = None
             global_flag = True
         if b'end2' in data:
-            with open("/home/mahdi/Documents/term7/multiMedia/prj1/env/download/voice.wav", 'wb') as f:
+            with open("./download/voice.wav", 'wb') as f:
                 f.write(self.rec_data)
             self.rec_data = b''
             self.rec_data_type = None
