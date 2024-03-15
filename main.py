@@ -180,11 +180,11 @@ class SocketServer(QThread):
         self.server_socket.bind((self.server_ip, self.port))
         self.server_socket.listen(0)
 
-    def receive_data(sock):
+    def receive_data(self, sock):
         data = sock.recv(1024).decode()
         return data
 
-    def receive_file(sock, filename):
+    def receive_file(self, sock, filename):
         with open(filename, 'wb') as f:
             while True:
                 data = sock.recv(1024)
@@ -241,10 +241,10 @@ class SendMessage(QThread):
         self.ip = ip
         self.port = port
 
-    def send_data(sock, data):
+    def send_data(self, sock, data):
         sock.sendall(data.encode())
 
-    def send_file(sock, filename):
+    def send_file(self, sock, filename):
         with open(filename, 'rb') as f:
             while True:
                 data = f.read(1024)
@@ -490,7 +490,7 @@ class MainWindow(QMainWindow):
         Handle the functionality for connecting to a server.
         """
         self.ip = self.ip_entry1.text()
-        self.port = self.ip_entry2.text()
+        self.port = int(self.ip_entry2.text())
         pass
 
     def play_voice(self):
