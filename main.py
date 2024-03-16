@@ -1,5 +1,4 @@
 import sys
-import os
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
@@ -7,12 +6,9 @@ import cv2
 import sys
 import wave
 import pyaudio
-import time
 import socket
 import numpy as np
-from PySide6.QtCore import QObject, QThread, Signal
-from functools import partial
-from PySide6.QtMultimedia import QSoundEffect
+from PySide6.QtCore import QThread, Signal
 
 
 # Global flag for image change
@@ -270,11 +266,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Set window title and initial geometry
-        self.setWindowTitle("TCP connection")  # Set the window title
-
         # Set size of window
-        self.setWindowTitle("Fixed Size Window")
+        self.setWindowTitle("TCP connection")
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedSize(1050, 670)
 
@@ -342,12 +335,12 @@ class MainWindow(QMainWindow):
         self.ip_entry1 = QLineEdit()
         self.ip_entry1.setPlaceholderText("  IP")
         self.ip_entry1.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 10px;")
+            "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 5px;")
 
         # Line edit for entering port number
         self.ip_entry2 = QLineEdit()
         self.ip_entry2.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 10px;")
+            "color: white; background-color: black; border: 1px solid #ed1ee7; border-radius: 5px;")
         self.ip_entry2.setPlaceholderText("  Port")
 
         # Button for connecting
@@ -395,8 +388,10 @@ class MainWindow(QMainWindow):
         self.left_image_label = QLabel(left_vertical_widget)
         self.left_image_label.resize(500, 400)
         pixmap = QPixmap(
-            "./imgs/no_image71.png")
+            "./imgs/4.jpg")
+        pixmap = pixmap.scaled(500, 400, Qt.KeepAspectRatio)
         self.left_image_label.setPixmap(pixmap)
+        self.left_image_label.move(50, 0)
 
         # Create a QPushButton instance for left side functionalities
         self.left_button = QPushButton(left_vertical_widget)
@@ -489,6 +484,7 @@ class MainWindow(QMainWindow):
         # Create a QPixmap from the Qt image and set it to the QLabel
         pixmap = QPixmap.fromImage(qt_img)
         self.left_image_label.setPixmap(pixmap)
+        self.left_image_label.move(0, 0)
 
     def connect(self):
         """
