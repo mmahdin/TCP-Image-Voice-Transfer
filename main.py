@@ -11,9 +11,6 @@ import numpy as np
 from PySide6.QtCore import QThread, Signal
 
 
-# Global flag for image change
-global_flag = False  # Declaring a global flag to control image updates
-
 capture_image_flg = 0  # Declaring a global flag to control capture image
 
 # CSS-like button styles for various functionalities
@@ -97,28 +94,6 @@ button_style_sub = """
 """
 
 
-class ImageThread(QThread):
-    # Define a signal to emit the image array
-    change_image_signal = Signal(np.ndarray)
-
-    def run(self):
-        global global_flag  # Access the global flag for controlling image updates
-        while True:
-            if global_flag:  # Check if the flag is set for image update
-                # Load and process the new image (can be replaced with custom logic)
-                image = cv2.imread(
-                    "./download/image.png")
-                image = cv2.resize(image, (500, 400))
-                # Emit the signal with the updated image
-                self.change_image_signal.emit(image)
-                # Reset the flag after updating the image to prevent continuous updates
-                global_flag = False
-            else:
-                pass  # If the flag is not set, do nothing
-            # Sleep to avoid busy wait and reduce CPU usage
-            self.sleep(1)
-
-
 class WebcamThread(QThread):
     # Define a signal to emit the webcam frame
     change_pixmap_signal = Signal(np.ndarray)
@@ -190,16 +165,15 @@ class SocketServer(QThread):
                 f.write(data)
 
     def run(self):
-        global global_flag
         while True:
             client_socket, client_address = self.server_socket.accept()
             signal = self.receive_data(client_socket)
             if signal == "image":
                 self.receive_file(client_socket, "./download/image.png")
-                global_flag = True
+                self.finished.emit('image')
             elif signal == "voice":
                 self.receive_file(client_socket, "./download/voice.wav")
-                self.finished.emit()
+                self.finished.emit('voice')
 
 
 class SoundThread(QThread):
@@ -285,11 +259,6 @@ class MainWindow(QMainWindow):
         self.webcam_thread = WebcamThread()
         self.webcam_thread.change_pixmap_signal.connect(self.update_image)
         self.webcam_thread.start()
-
-        # Create and start image thread
-        self.image_thread = ImageThread()
-        self.image_thread.change_image_signal.connect(self.update_left_image)
-        self.image_thread.start()
 
         # Create and start server
         self.socket_server = SocketServer()
@@ -514,10 +483,19 @@ class MainWindow(QMainWindow):
         self.left_button.setStyleSheet(
             "border-image: url(./imgs/play2b.png);")
 
-    def change_play_img(self):
-        self.left_button.setStyleSheet(
-            "border-image: url(./imgs/play2b.png);")
-        self.voice_flg = 1
+    def change_play_img(self, data):
+        if data == 'voice':
+            self.left_button.setStyleSheet(
+                "border-image: url(./imgs/play2b.png);")
+            self.voice_flg = 1
+        else:
+            try:
+                image = cv2.imread(
+                    "./download/image.png")
+                image = cv2.resize(image, (500, 400))
+                self.update_left_image(image)
+            except:
+                pass
 
     def capture_image(self):
         """
