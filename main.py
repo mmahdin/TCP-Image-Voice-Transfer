@@ -142,7 +142,7 @@ class AudioRecorderThread(QThread):
 
 
 class SocketServer(QThread):
-    finished = Signal()
+    finished = Signal(str)
 
     def __init__(self):
         super().__init__()
