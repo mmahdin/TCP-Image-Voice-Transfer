@@ -9,9 +9,12 @@ import pyaudio
 import socket
 import numpy as np
 from PySide6.QtCore import QThread, Signal
+import os
 
 
 capture_image_flg = 0  # Declaring a global flag to control capture image
+img_avail = 0
+voice_avail = 0
 
 # CSS-like button styles for various functionalities
 button_style_r = """
@@ -92,6 +95,83 @@ button_style_sub = """
         border: 1px solid #fffd0a;
     }
 """
+
+
+class ErrorMessage():
+    def __init__(self, win):
+        self.rised_error = 0
+        self.win = win
+
+        self.error_png = './imgs/exc.png'
+        self.remark_png = './imgs/remark.png'
+        self.tik_png = './imgs/tik.png'
+
+        self.message = ''
+        self.color = '#ff6b0c'
+
+        self.img = QLabel(win)
+        pix = QPixmap("./imgs/remark.png")
+        self.img.setPixmap(pix)
+        self.img.resize(70, 70)
+        self.img.move(10, 615)
+        self.img.mousePressEvent = self._show_error
+        self.img.mouseReleaseEvent = self.mouseReleaseEvent
+        self.img.show()
+
+    def check(self):
+        if self.rised_error == 1:
+            pix = QPixmap(self.error_png)
+            self.img.setPixmap(pix)
+            self.message = "Enter destination IP/Port"
+            self.color = '#ff0806'
+        elif self.rised_error == 2:
+            pix = QPixmap(self.error_png)
+            self.img.setPixmap(pix)
+            self.message = "Record a voice"
+            self.color = '#ff0806'
+        elif self.rised_error == 3:
+            pix = QPixmap(self.error_png)
+            self.img.setPixmap(pix)
+            self.message = "Take a picture"
+            self.color = '#ff0806'
+        elif not os.path.exists('./voice_rec/my_voice.wav'):
+            pix = QPixmap(self.remark_png)
+            self.img.setPixmap(pix)
+            self.message = "Record a voice"
+            self.color = '#ff6b0c'
+        elif not os.path.exists('./capture/myimg.png'):
+            pix = QPixmap(self.remark_png)
+            self.img.setPixmap(pix)
+            self.message = "Take a picture"
+            self.color = '#ff6b0c'
+        elif self.win.ip == None or self.win.port == None or self.win.ip == '' or self.win.port == '':
+            pix = QPixmap(self.remark_png)
+            self.img.setPixmap(pix)
+            self.message = "Enter destination IP/Port"
+            self.color = '#ff6b0c'
+        else:
+            pix = QPixmap(self.tik_png)
+            self.img.setPixmap(pix)
+            self.message = 'Just send it!'
+            self.color = "#27ff11"
+
+    def _show_error(self, event):
+        self.show_error()
+
+    def mouseReleaseEvent(self, e):
+        try:
+            self.error_message.close()
+        except:
+            pass
+
+    def show_error(self):
+        self.error_message = QLabel(self.win)
+        self.error_message.setText(self.message)
+        self.error_message.setStyleSheet(
+            f"color: {self.color} ;background-color: None;font-size15px;")
+        self.error_message.move(50, 625)
+        self.error_message.resize(200, 50)
+        self.error_message.show()
 
 
 class WebcamThread(QThread):
@@ -285,6 +365,10 @@ class MainWindow(QMainWindow):
             self.audio_format, self.channels, self.sample_rate, self.chunk)
         self.recorder_thread.frame_ready.connect(self.process_audio_frame)
 
+        # Managing errors
+        self.error_handler = ErrorMessage(self)
+        self.error_handler.check()
+
     def create_layout(self):
         # Create main layout for central widget
         main_layout = QVBoxLayout()
@@ -423,6 +507,8 @@ class MainWindow(QMainWindow):
             cv2.imwrite("./capture/myimg.png", cv_img)
             capture_image_flg = 0
             cv_img = np.ones_like(cv_img)
+            self.error_handler.rised_error = 0
+            self.error_handler.check()
 
         # Resize the image to fit the QLabel
         cv_img = cv2.resize(cv_img, (500, 400))
@@ -459,9 +545,13 @@ class MainWindow(QMainWindow):
         """
         Handle the functionality for connecting to a server.
         """
-        self.ip = self.ip_entry1.text()
-        self.port = int(self.ip_entry2.text())
-        pass
+        if self.ip_entry1.text() in [None, ''] or self.ip_entry2.text() in [None, '']:
+            self.error_handler.rised_error = 1
+        else:
+            self.ip = self.ip_entry1.text()
+            self.port = int(self.ip_entry2.text())
+            self.error_handler.rised_error = 0
+        self.error_handler.check()
 
     def play_voice(self):
         """
@@ -522,6 +612,8 @@ class MainWindow(QMainWindow):
             self.right_bottom_button1.setStyleSheet(
                 "border-image: url(./imgs/mic2b2.png);")
             self.recording = False
+            self.error_handler.rised_error = 0
+            self.error_handler.check()
 
     def process_audio_frame(self, frame):
         self.audio_frames.append(frame)
@@ -556,8 +648,18 @@ class MainWindow(QMainWindow):
         Returns:
             None
         """
-        self.thread = SendMessage(self.ip, self.port)
-        self.thread.start()
+        if self.ip_entry1.text() in [None, ''] or self.ip_entry2.text() in [None, '']:
+            self.error_handler.rised_error = 1
+            self.error_handler.check()
+        elif not os.path.exists('./voice_rec/my_voice.wav'):
+            self.error_handler.rised_error = 2
+            self.error_handler.check()
+        elif not os.path.exists('./capture/myimg.png'):
+            self.error_handler.rised_error = 3
+            self.error_handler.check()
+        else:
+            self.thread = SendMessage(self.ip, self.port)
+            self.thread.start()
 
 
 if __name__ == "__main__":
